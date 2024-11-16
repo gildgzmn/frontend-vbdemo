@@ -48,20 +48,6 @@ const dataFromDataPage = [
   },
 ];
 
-//  data summary
-// const getSummaryData = (data) => {
-//   const totalVoters = data.filter((item) => item.voterStatus).length;
-//   const totalBoughtVotes = data.filter((item) => item.voteBoughtStatus).length;
-//   const totalNotVoters = data.filter((item) => !item.voterStatus).length;
-
-//   return {
-//     totalVoters,
-//     totalBoughtVotes,
-//     totalNotVoters,
-//   };
-// };
-
-// group data by address
 const groupDataByAddress = (data) => {
   const groupedData = {};
   data.forEach((item) => {
@@ -141,9 +127,8 @@ const LandingPage = () => {
 
 
   const barGraphData = [
-    { name: "Voters", value: summaryData.totalRes },
-    { name: "Non-Voters", value: summaryData.totalVb },
-    { name: "Votes Bought", value: summaryData.totalVb },
+    { name: "Residents", value: summaryData.totalRes },
+    { name: "Recruited", value: summaryData.totalVb },
   ];
 
   return (
@@ -175,15 +160,15 @@ const LandingPage = () => {
       <div className="bg-gray-800 text-white py-8 px-4">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           <motion.div className="bg-gray-900 p-6 rounded-lg shadow-lg" whileHover={{ scale: 1.05 }}>
-            <h3 className="text-2xl font-semibold">Total Voters</h3>
+            <h3 className="text-2xl font-semibold">Total Residents</h3>
             <p className="text-xl">{summaryData.totalRes}</p>
           </motion.div> 
           <motion.div className="bg-gray-900 p-6 rounded-lg shadow-lg" whileHover={{ scale: 1.05 }}>
-            <h3 className="text-2xl font-semibold">Total Votes Bought</h3>
+            <h3 className="text-2xl font-semibold">Total Recruited</h3>
             <p className="text-xl">{summaryData.totalVb}</p>
           </motion.div>
           <motion.div className="bg-gray-900 p-6 rounded-lg shadow-lg" whileHover={{ scale: 1.05 }}>
-            <h3 className="text-2xl font-semibold">Total Non-Voters</h3>
+            <h3 className="text-2xl font-semibold">Recruitment Percentage</h3>
             <p className="text-xl">{summaryData.percentage}</p>
           </motion.div>
         </div>
@@ -250,5 +235,6 @@ const LandingPage = () => {
     </div>
   );
 };
+
 
 export default LandingPage;
