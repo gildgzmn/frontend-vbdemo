@@ -3,8 +3,8 @@ import { useParams } from "react-router-dom";
 import "../css/ProfilePage.css"; 
 
 const ProfilePage = ({ data }) => {
-  const { id } = useParams(); // Access the ID from the URL params
-  const user = data.find((user) => user.id === parseInt(id)); // Find the user by ID
+  const { id } = useParams();
+  const user = data.find((user) => user.id === parseInt(id)); 
 
   const [isEditing, setIsEditing] = useState(false);
   const [newPhone, setNewPhone] = useState(user?.mobileNum || "");
