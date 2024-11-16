@@ -11,7 +11,7 @@ import "../css/DataPage.css";
 const DataPage = () => {
   const navigate = useNavigate();
 
-  //temp
+  // Temporary dataset for populating the table.
   const [data] = useState([
     {
       id: 1,
@@ -41,6 +41,7 @@ const DataPage = () => {
     },
   ]);
 
+  // Filters state for managing table filtering options.
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     firstName: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -53,8 +54,9 @@ const DataPage = () => {
     muniCode: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
 
-  const [globalFilterValue, setGlobalFilterValue] = useState("");
+  const [globalFilterValue, setGlobalFilterValue] = useState(""); // Stores the value of the global search filter.
 
+  // Handles changes in the global filter input.
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
     setFilters((prevFilters) => ({
@@ -64,6 +66,7 @@ const DataPage = () => {
     setGlobalFilterValue(value);
   };
 
+  // Renders the search input field in the table header.
   const renderHeader = () => (
     <div className="flex justify-content-end">
       <span className="p-input-icon-left">
@@ -78,6 +81,7 @@ const DataPage = () => {
     </div>
   );
 
+  // Formats the voter registration status with a tag.
   const statusTemplate = (status) => (
     <Tag
       value={status ? "Registered" : "Not Yet"}
@@ -85,6 +89,7 @@ const DataPage = () => {
     />
   );
 
+  // Formats the vote payment status with a tag.
   const voteBoughtTemplate = (status) => (
     <Tag
       value={status ? "Paid" : "Not Yet"}
@@ -92,6 +97,7 @@ const DataPage = () => {
     />
   );
 
+  // Renders a dropdown filter for voter status.
   const voterStatusFilterTemplate = (options) => (
     <Dropdown
       value={options.value}
@@ -106,6 +112,7 @@ const DataPage = () => {
     />
   );
 
+  // Renders a dropdown filter for vote payment status.
   const voteBoughtFilterTemplate = (options) => (
     <Dropdown
       value={options.value}
@@ -120,33 +127,36 @@ const DataPage = () => {
     />
   );
 
+  // Navigates to the profile page of the clicked row.
   const handleRowClick = (rowData) => {
     navigate(`/profile/${rowData.id}`);
   };
 
   return (
     <div className="container mx-auto p-4">
+      {/* Card container for the table */}
       <div className="card table-container overflow-x-auto">
         <DataTable
           value={data}
           paginator
           rows={20}
-          header={renderHeader()}
-          filters={filters}
-          filterDisplay="row"
+          header={renderHeader()} 
+          filters={filters} 
+          filterDisplay="row" 
           globalFilterFields={[
             "firstName",
-            "lastName", 
+            "lastName",
             "middleName",
             "mobileNum",
-            "brgyCode", 
+            "brgyCode",
             "muniCode",
-          ]}
+          ]} 
           emptyMessage="No records found."
-          scrollable
+          scrollable 
           scrollHeight="flex"
-          onRowClick={(e) => handleRowClick(e.data)}
+          onRowClick={(e) => handleRowClick(e.data)} 
         >
+          {/* Table columns */}
           <Column
             header="Name"
             body={(rowData) =>
@@ -157,7 +167,10 @@ const DataPage = () => {
             filterField="firstName"
             filterMenuStyle={{ width: "12rem" }}
             showFilterMenu={false}
+            headerClassName="text-center"
+          
           />
+
           <Column
             header="Address"
             body={(rowData) => `${rowData.brgyCode} ${rowData.muniCode}`}
@@ -166,17 +179,24 @@ const DataPage = () => {
             filterField="brgyCode"
             filterMenuStyle={{ width: "12rem" }}
             showFilterMenu={false}
+          
           />
-          <Column field="mobileNum" header="Mobile Number" />
+
+          <Column
+            field="mobileNum"
+            header="Mobile Number"
+          
+          />
           <Column field="age" header="Age" />
           <Column field="gender" header="Gender" />
           <Column
             field="voterStatus"
-            header="Status"
+            header="Registration Status"
             body={(rowData) => statusTemplate(rowData.voterStatus)}
             filter
             filterElement={voterStatusFilterTemplate}
             showFilterMenu={false}
+          
           />
           <Column
             field="voteBought"
@@ -185,6 +205,7 @@ const DataPage = () => {
             filter
             filterElement={voteBoughtFilterTemplate}
             showFilterMenu={false}
+          
           />
         </DataTable>
       </div>
