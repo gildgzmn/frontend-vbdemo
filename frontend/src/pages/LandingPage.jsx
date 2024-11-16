@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Capitol from "../assets/Capitol_Batangas3.jpg";
 import Logo from "../assets/Seal_of_Batangas.png";
+import LocStatService from "../services/LocStatService";
+
+
 import {
   LineChart,
   Line,
@@ -46,17 +49,17 @@ const dataFromDataPage = [
 ];
 
 //  data summary
-const getSummaryData = (data) => {
-  const totalVoters = data.filter((item) => item.voterStatus).length;
-  const totalBoughtVotes = data.filter((item) => item.voteBoughtStatus).length;
-  const totalNotVoters = data.filter((item) => !item.voterStatus).length;
+// const getSummaryData = (data) => {
+//   const totalVoters = data.filter((item) => item.voterStatus).length;
+//   const totalBoughtVotes = data.filter((item) => item.voteBoughtStatus).length;
+//   const totalNotVoters = data.filter((item) => !item.voterStatus).length;
 
-  return {
-    totalVoters,
-    totalBoughtVotes,
-    totalNotVoters,
-  };
-};
+//   return {
+//     totalVoters,
+//     totalBoughtVotes,
+//     totalNotVoters,
+//   };
+// };
 
 // group data by address
 const groupDataByAddress = (data) => {
@@ -76,8 +79,56 @@ const groupDataByAddress = (data) => {
 };
 
 const LandingPage = () => {
+  console.log("new");
 
-  const { totalVoters, totalBoughtVotes, totalNotVoters } = getSummaryData(dataFromDataPage);
+  
+  const [summaryData, setSummaryData] = useState({
+    totalRes: 0,
+    totalVb: 0,
+    percentage: ""
+  });
+
+  const [MuniSummaryData, setMuniSummaryData] = useState({
+    totalRes: 0,
+    totalVb: 0,
+    percentage: ""
+  });
+
+  useEffect(() => {
+    console.log("useEffect");
+    const fetchData = async () => {
+      try {
+        const response = await LocStatService.getOverAllStats();
+        console.log(response)
+        console.log(response.data);
+        const { totalRes, totalVb, percentage} = response.data;
+        setSummaryData({ totalRes, totalVb, percentage });
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    console.log("useEffect");
+    const fetchData = async () => {
+      try {
+        const response = await LocStatService.getStatsByMuni();
+        console.log(response)
+        console.log(response.data);
+        const { totalRes, totalVb, percentage} = response.data;
+        setMuniSummaryData({ totalRes, totalVb, percentage });
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  //const { totalVoters, totalBoughtVotes, totalNotVoters } = getSummaryData(dataFromDataPage);
   const [selectedAddress, setSelectedAddress] = useState("");
   const groupedData = groupDataByAddress(dataFromDataPage);
   const filteredData = selectedAddress ? { [selectedAddress]: groupedData[selectedAddress] } : groupedData;
@@ -87,10 +138,12 @@ const LandingPage = () => {
     voteBoughts: filteredData[address].voteBoughts,
   }));
 
+
+
   const barGraphData = [
-    { name: "Voters", value: totalVoters },
-    { name: "Non-Voters", value: totalNotVoters },
-    { name: "Votes Bought", value: totalBoughtVotes },
+    { name: "Voters", value: summaryData.totalRes },
+    { name: "Non-Voters", value: summaryData.totalVb },
+    { name: "Votes Bought", value: summaryData.totalVb },
   ];
 
   return (
@@ -123,15 +176,15 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           <motion.div className="bg-gray-900 p-6 rounded-lg shadow-lg" whileHover={{ scale: 1.05 }}>
             <h3 className="text-2xl font-semibold">Total Voters</h3>
-            <p className="text-xl">{totalVoters}</p>
-          </motion.div>
+            <p className="text-xl">{summaryData.totalRes}</p>
+          </motion.div> 
           <motion.div className="bg-gray-900 p-6 rounded-lg shadow-lg" whileHover={{ scale: 1.05 }}>
             <h3 className="text-2xl font-semibold">Total Votes Bought</h3>
-            <p className="text-xl">{totalBoughtVotes}</p>
+            <p className="text-xl">{summaryData.totalVb}</p>
           </motion.div>
           <motion.div className="bg-gray-900 p-6 rounded-lg shadow-lg" whileHover={{ scale: 1.05 }}>
             <h3 className="text-2xl font-semibold">Total Non-Voters</h3>
-            <p className="text-xl">{totalNotVoters}</p>
+            <p className="text-xl">{summaryData.percentage}</p>
           </motion.div>
         </div>
       </div>
@@ -180,7 +233,7 @@ const LandingPage = () => {
 
           {/* Bar Chart for Vote Bought Status */}
           <motion.div className="bg-white p-4 rounded-lg shadow-lg" whileHover={{ scale: 1.02 }}>
-            <h3 className="text-xl font-semibold mb-4 text-center">Vote Bought Status</h3>
+            <h3 className="text-xl font-semibold mb-4 text-center">Overall Recruitment Status</h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={barGraphData}>
                 <CartesianGrid strokeDasharray="3 3" />
