@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Capitol from "../assets/Capitol_Batangas3.jpg";
 import Logo from "../assets/Seal_of_Batangas.png";
+import LocStatService from "../services/LocStatService";
+
+
 import {
   LineChart,
   Line,
@@ -15,7 +18,7 @@ import {
   Bar,
 } from "recharts";
 
-// Temporary sample data from DataPage
+// temporary sample data from DataPage
 const dataFromDataPage = [
   {
     id: 1,
@@ -27,8 +30,8 @@ const dataFromDataPage = [
     gender: "Male",
     brgyCode: "Brgy 1",
     muniCode: "Muni A",
-    voterStatus: true, // Registered
-    voteBought: false, // Not Yet Paid
+    voterStatus: true,
+    voteBought: false,
   },
   {
     id: 2,
@@ -40,94 +43,105 @@ const dataFromDataPage = [
     gender: "Female",
     brgyCode: "Brgy 2",
     muniCode: "Muni B",
-    voterStatus: true, // Registered
-    voteBought: true, // Paid
+    voterStatus: true,
+    voteBought: true,
   },
 ];
 
-// Data summary
-const getSummaryData = (data) => {
-  const totalVoters = data.filter((item) => item.voterStatus).length;
-  const totalPaidVotes = data.filter((item) => item.voteBought).length;
-  const totalNotVoters = data.filter((item) => !item.voterStatus).length;
-  const totalNotPaidVotes = data.filter((item) => !item.voteBought).length;
-
-  return {
-    totalVoters,
-    totalPaidVotes,
-    totalNotVoters,
-    totalNotPaidVotes,
-  };
-};
-
-// Group data by address
 const groupDataByAddress = (data) => {
   const groupedData = {};
   data.forEach((item) => {
-    const address = `${item.brgyCode} ${item.muniCode}`;
-    if (!groupedData[address]) {
-      groupedData[address] = { voters: 0, paidVotes: 0, notPaidVotes: 0 };
+    if (!groupedData[item.address]) {
+      groupedData[item.address] = { voters: 0, voteBoughts: 0 };
     }
     if (item.voterStatus) {
-      groupedData[address].voters += 1;
+      groupedData[item.address].voters += 1;
     }
-    if (item.voteBought) {
-      groupedData[address].paidVotes += 1;
-    } else {
-      groupedData[address].notPaidVotes += 1;
+    if (item.voteBoughtStatus) {
+      groupedData[item.address].voteBoughts += 1;
     }
   });
   return groupedData;
 };
 
 const LandingPage = () => {
-  const { totalVoters, totalPaidVotes, totalNotVoters, totalNotPaidVotes } = getSummaryData(dataFromDataPage);
+  console.log("new");
+
+  
+  const [summaryData, setSummaryData] = useState({
+    totalRes: 0,
+    totalVb: 0,
+    percentage: ""
+  });
+
+  const [MuniSummaryData, setMuniSummaryData] = useState({
+    totalRes: 0,
+    totalVb: 0,
+    percentage: ""
+  });
+
+  useEffect(() => {
+    console.log("useEffect");
+    const fetchData = async () => {
+      try {
+        const response = await LocStatService.getOverAllStats();
+        console.log(response)
+        console.log(response.data);
+        const { totalRes, totalVb, percentage} = response.data;
+        setSummaryData({ totalRes, totalVb, percentage });
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    console.log("useEffect");
+    const fetchData = async () => {
+      try {
+        const response = await LocStatService.getStatsByMuni();
+        console.log(response)
+        console.log(response.data);
+        const { totalRes, totalVb, percentage} = response.data;
+        setMuniSummaryData({ totalRes, totalVb, percentage });
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  //const { totalVoters, totalBoughtVotes, totalNotVoters } = getSummaryData(dataFromDataPage);
   const [selectedAddress, setSelectedAddress] = useState("");
   const groupedData = groupDataByAddress(dataFromDataPage);
   const filteredData = selectedAddress ? { [selectedAddress]: groupedData[selectedAddress] } : groupedData;
   const graphData = Object.keys(filteredData).map((address) => ({
     name: address,
     voters: filteredData[address].voters,
-    paidVotes: filteredData[address].paidVotes,
-    notPaidVotes: filteredData[address].notPaidVotes,
+    voteBoughts: filteredData[address].voteBoughts,
   }));
 
-  const barGraphDataRegistered = [
-    { name: "Registered", value: totalVoters },
-    { name: "Non-Registered", value: totalNotVoters },
-  ];
 
-  const barGraphDataPaidStatus = [
-    { name: "Paid", value: totalPaidVotes },
-    { name: "Not Paid", value: totalNotPaidVotes },
+
+  const barGraphData = [
+    { name: "Residents", value: summaryData.totalRes },
+    { name: "Recruited", value: summaryData.totalVb },
   ];
 
   return (
     <div className="relative landing-page">
       {/* Header Section */}
-      <div
-        style={{
-          backgroundImage: `linear-gradient(to top, rgba(38, 39, 43, 0.8), rgba(38, 39, 43, 0.5)), url(${Capitol})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center center",
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-        }}
-      >
+      <div style={{ backgroundImage: `linear-gradient(to top, rgba(38, 39, 43, 0.8), rgba(38, 39, 43, 0.5)), url(${Capitol})`, backgroundSize: "cover", backgroundPosition: "center center", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
         <div className="text-center text-white">
           <motion.h1
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.7 }}
             className="text-5xl font-bold"
-            style={{
-              paddingBottom: "40px",
-              fontFamily: "Poppins",
-              textShadow: "6px 6px 8px rgba(0, 0, 0, 0.5)",
-            }}
+            style={{ paddingBottom: "40px", fontFamily: "Poppins", textShadow: "6px 6px 8px rgba(0, 0, 0, 0.5)" }}
           >
             PROVINCIAL GOVERNMENT <br />OF BATANGAS
           </motion.h1>
@@ -137,13 +151,7 @@ const LandingPage = () => {
             transition={{ duration: 0.7 }}
             alt="Logo"
             src={Logo}
-            style={{
-              height: "250px",
-              width: "250px",
-              objectFit: "contain",
-              display: "block",
-              margin: "0 auto",
-            }}
+            style={{ height: "250px", width: "250px", objectFit: "contain", display: "block", margin: "0 auto" }}
           />
         </div>
       </div>
@@ -152,16 +160,16 @@ const LandingPage = () => {
       <div className="bg-gray-800 text-white py-8 px-4">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           <motion.div className="bg-gray-900 p-6 rounded-lg shadow-lg" whileHover={{ scale: 1.05 }}>
-            <h3 className="text-2xl font-semibold">Total Registered Residents</h3>
-            <p className="text-xl">{totalVoters}</p>
+            <h3 className="text-2xl font-semibold">Total Residents</h3>
+            <p className="text-xl">{summaryData.totalRes}</p>
+          </motion.div> 
+          <motion.div className="bg-gray-900 p-6 rounded-lg shadow-lg" whileHover={{ scale: 1.05 }}>
+            <h3 className="text-2xl font-semibold">Total Recruited</h3>
+            <p className="text-xl">{summaryData.totalVb}</p>
           </motion.div>
           <motion.div className="bg-gray-900 p-6 rounded-lg shadow-lg" whileHover={{ scale: 1.05 }}>
-            <h3 className="text-2xl font-semibold">Total Paid Residents</h3>
-            <p className="text-xl">{totalPaidVotes}</p>
-          </motion.div>
-          <motion.div className="bg-gray-900 p-6 rounded-lg shadow-lg" whileHover={{ scale: 1.05 }}>
-            <h3 className="text-2xl font-semibold">Total Non-Registered Residents</h3>
-            <p className="text-xl">{totalNotVoters}</p>
+            <h3 className="text-2xl font-semibold">Recruitment Percentage</h3>
+            <p className="text-xl">{summaryData.percentage}</p>
           </motion.div>
         </div>
       </div>
@@ -171,18 +179,12 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           {/* Line Chart */}
           <motion.div className="bg-white p-4 rounded-lg shadow-lg" whileHover={{ scale: 1.02 }}>
-            <h3 className="text-xl font-semibold mb-4 text-center">Registered and Paid Residents per Address</h3>
+            <h3 className="text-xl font-semibold mb-4 text-center">Voters and Vote Boughts per Address</h3>
             <div className="mb-4 text-center">
-              <select
-                className="border p-2 rounded"
-                value={selectedAddress}
-                onChange={(e) => setSelectedAddress(e.target.value)}
-              >
+              <select className="border p-2 rounded" value={selectedAddress} onChange={(e) => setSelectedAddress(e.target.value)}>
                 <option value="">All Addresses</option>
                 {Object.keys(groupedData).map((address) => (
-                  <option key={address} value={address}>
-                    {address}
-                  </option>
+                  <option key={address} value={address}>{address}</option>
                 ))}
               </select>
             </div>
@@ -193,31 +195,19 @@ const LandingPage = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="voters"
-                  stroke="#4CAF50"
-                  activeDot={{ r: 8 }}
-                  name="Registered Residents"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="paidVotes"
-                  stroke="#17a2b8"
-                  activeDot={{ r: 8 }}
-                  name="Paid Residents"
-                />
+                <Line type="monotone" dataKey="voters" stroke="#4CAF50" activeDot={{ r: 8 }} name="Voters" />
+                <Line type="monotone" dataKey="voteBoughts" stroke="#17a2b8" activeDot={{ r: 8 }} name="Votes Bought" />
               </LineChart>
             </ResponsiveContainer>
           </motion.div>
 
-          {/* Bar Chart for Registered vs Non */}
+          {/* Bar Chart for Voters vs Non-Voters */}
           <motion.div className="bg-white p-4 rounded-lg shadow-lg" whileHover={{ scale: 1.02 }}>
-            <h3 className="text-xl font-semibold mb-4 text-center">Registered vs Non-Registered</h3>
+            <h3 className="text-xl font-semibold mb-4 text-center">Voter vs Non-Voter</h3>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={barGraphDataRegistered}>
+              <BarChart data={barGraphData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
-                <XAxis dataKey="name" stroke="#3a3b3c" />
+                <XAxis dataKey="name" stroke="3a3b3c" />
                 <YAxis stroke="#3a3b3c" />
                 <Tooltip />
                 <Legend />
@@ -226,17 +216,17 @@ const LandingPage = () => {
             </ResponsiveContainer>
           </motion.div>
 
-          {/* Bar Chart for Paid vs Not Paid */}
+          {/* Bar Chart for Vote Bought Status */}
           <motion.div className="bg-white p-4 rounded-lg shadow-lg" whileHover={{ scale: 1.02 }}>
-            <h3 className="text-xl font-semibold mb-4 text-center">Paid Residents Status</h3>
+            <h3 className="text-xl font-semibold mb-4 text-center">Overall Recruitment Status</h3>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={barGraphDataPaidStatus}>
+              <BarChart data={barGraphData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="value" fill="#dc3545" />
+                <Bar dataKey="value" fill="#17a2b8" />
               </BarChart>
             </ResponsiveContainer>
           </motion.div>
@@ -245,5 +235,6 @@ const LandingPage = () => {
     </div>
   );
 };
+
 
 export default LandingPage;
