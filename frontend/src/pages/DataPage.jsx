@@ -80,14 +80,14 @@ const DataPage = () => {
 
   const statusTemplate = (status) => (
     <Tag
-      value={status ? "Voter" : "Not Yet"}
+      value={status ? "Registered" : "Not Yet"}
       severity={status ? "success" : "warning"}
     />
   );
 
   const voteBoughtTemplate = (status) => (
     <Tag
-      value={status ? "Bought" : "Not Yet"}
+      value={status ? "Paid" : "Not Yet"}
       severity={status ? "danger" : "info"}
     />
   );
@@ -96,7 +96,7 @@ const DataPage = () => {
     <Dropdown
       value={options.value}
       options={[
-        { label: "Voter", value: true },
+        { label: "Registered", value: true },
         { label: "Not Yet", value: false },
       ]}
       onChange={(e) => options.filterApplyCallback(e.value)}
@@ -110,7 +110,7 @@ const DataPage = () => {
     <Dropdown
       value={options.value}
       options={[
-        { label: "Bought", value: true },
+        { label: "Paid", value: true },
         { label: "Not Yet", value: false },
       ]}
       onChange={(e) => options.filterApplyCallback(e.value)}
@@ -172,7 +172,7 @@ const DataPage = () => {
           <Column field="gender" header="Gender" />
           <Column
             field="voterStatus"
-            header="Voter Status"
+            header="Status"
             body={(rowData) => statusTemplate(rowData.voterStatus)}
             filter
             filterElement={voterStatusFilterTemplate}
@@ -180,7 +180,7 @@ const DataPage = () => {
           />
           <Column
             field="voteBought"
-            header="Vote Bought"
+            header="Payment Status"
             body={(rowData) => voteBoughtTemplate(rowData.voteBought)}
             filter
             filterElement={voteBoughtFilterTemplate}
