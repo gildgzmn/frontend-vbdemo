@@ -24,21 +24,7 @@ class LocStatService {
     }
   }
  
-// getOverAllStats = async () => {
-//     const response = await axios.get(`${baseUrl}/overall`);
-//     return response.data;
-// };
 
-// getStatsByMuni = async (muniCode) => {
-//     const response = await axios.get(`${baseUrl}/muni/${muniCode}`);
-//     return response.data;
-// };
-
-
-// getStatsByBrgy = async (brgyCode) => {
-//     const response = await axios.get(`${baseUrl}/overall/${brgyCode}`);
-//     return response.data;
-// };
 }
 
 export default LocStatService;

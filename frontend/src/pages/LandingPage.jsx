@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import Capitol from "../assets/Capitol_Batangas3.jpg";
 import Logo from "../assets/Seal_of_Batangas.png";
 import LocStatService from "../services/LocStatService";
+import MunicipalityDropdown from "../components/ui/MunicipalityDropdown";
+import LocationService from "../services/LocationService";
 
 
 import {
@@ -18,52 +20,6 @@ import {
   Bar,
 } from "recharts";
 
-// temporary sample data from DataPage
-const dataFromDataPage = [
-  {
-    id: 1,
-    firstName: "John",
-    middleName: "D.",
-    lastName: "Doe",
-    mobileNum: "123-4567",
-    age: 25,
-    gender: "Male",
-    brgyCode: "Brgy 1",
-    muniCode: "Muni A",
-    voterStatus: true,
-    voteBought: false,
-  },
-  {
-    id: 2,
-    firstName: "Jane",
-    middleName: "M.",
-    lastName: "Smith",
-    mobileNum: "987-6543",
-    age: 30,
-    gender: "Female",
-    brgyCode: "Brgy 2",
-    muniCode: "Muni B",
-    voterStatus: true,
-    voteBought: true,
-  },
-];
-
-const groupDataByAddress = (data) => {
-  const groupedData = {};
-  data.forEach((item) => {
-    if (!groupedData[item.address]) {
-      groupedData[item.address] = { voters: 0, voteBoughts: 0 };
-    }
-    if (item.voterStatus) {
-      groupedData[item.address].voters += 1;
-    }
-    if (item.voteBoughtStatus) {
-      groupedData[item.address].voteBoughts += 1;
-    }
-  });
-  return groupedData;
-};
-
 const LandingPage = () => {
   console.log("new");
 
@@ -74,7 +30,7 @@ const LandingPage = () => {
     percentage: ""
   });
 
-  const [MuniSummaryData, setMuniSummaryData] = useState({
+  const [muniSummaryData, setMuniSummaryData] = useState({
     totalRes: 0,
     totalVb: 0,
     percentage: ""
@@ -85,8 +41,6 @@ const LandingPage = () => {
     const fetchData = async () => {
       try {
         const response = await LocStatService.getOverAllStats();
-        console.log(response)
-        console.log(response.data);
         const { totalRes, totalVb, percentage} = response.data;
         setSummaryData({ totalRes, totalVb, percentage });
       } catch (error) {
@@ -102,8 +56,6 @@ const LandingPage = () => {
     const fetchData = async () => {
       try {
         const response = await LocStatService.getStatsByMuni();
-        console.log(response)
-        console.log(response.data);
         const { totalRes, totalVb, percentage} = response.data;
         setMuniSummaryData({ totalRes, totalVb, percentage });
       } catch (error) {
@@ -114,15 +66,47 @@ const LandingPage = () => {
     fetchData();
   }, []);
 
-  //const { totalVoters, totalBoughtVotes, totalNotVoters } = getSummaryData(dataFromDataPage);
-  const [selectedAddress, setSelectedAddress] = useState("");
-  const groupedData = groupDataByAddress(dataFromDataPage);
-  const filteredData = selectedAddress ? { [selectedAddress]: groupedData[selectedAddress] } : groupedData;
-  const graphData = Object.keys(filteredData).map((address) => ({
-    name: address,
-    voters: filteredData[address].voters,
-    voteBoughts: filteredData[address].voteBoughts,
-  }));
+  //getMunicipalityList
+  const [municipalities, setMunicipalities] = useState([]);
+
+  useEffect(() => {
+    const fetchMunicipalities = async () => {
+      try {
+        const response = await LocationService.getAllMunicipality();
+        console.log("data");
+        console.log(response);
+        const data = response.data;
+        const options = data.map(municipality => ({
+          value: municipality.citymunCode,
+          label: `${municipality.citymunDesc} - ${municipality.provDesc}`
+        }));
+        setMunicipalities(options);
+      } catch (error) {
+        console.error('Error fetching municipalities:', error);
+      }
+    };
+
+    fetchMunicipalities();
+  }, []);
+
+  const [selectedMunicipalityCode, setSelectedMunicipalityCode] = useState(null);
+
+
+  const handleMunicipalityChange = (municipalityCode) => {
+    console.log(municipalityCode);
+    setSelectedMunicipalityCode(municipalityCode);
+    
+   
+    // Fetch data for the selected municipality and update your graph component
+    // const graphData = await LocStatService.getStatsByMunicipality(municipalityCode);
+    // updateGraphData(graphData); // Update graph component with fetched data (replace with your actual update logic)
+  };
+
+  // //const { totalVoters, totalBoughtVotes, totalNotVoters } = getSummaryData(dataFromDataPage);
+  // const [selectedAddress, setSelectedAddress] = useState("");
+  // const groupedData = groupDataByAddress(dataFromDataPage);
+  // const filteredData = selectedAddress ? { [selectedAddress]: groupedData[selectedAddress] } : groupedData;
+  
 
 
 
@@ -177,32 +161,50 @@ const LandingPage = () => {
       {/* Graphs Section */}
       <div className="bg-gray-100 py-8">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-          {/* Line Chart */}
+          {/* Bar Chart for Vote Bought Status */}
           <motion.div className="bg-white p-4 rounded-lg shadow-lg" whileHover={{ scale: 1.02 }}>
-            <h3 className="text-xl font-semibold mb-4 text-center">Voters and Vote Boughts per Address</h3>
-            <div className="mb-4 text-center">
-              <select className="border p-2 rounded" value={selectedAddress} onChange={(e) => setSelectedAddress(e.target.value)}>
-                <option value="">All Addresses</option>
-                {Object.keys(groupedData).map((address) => (
-                  <option key={address} value={address}>{address}</option>
-                ))}
-              </select>
-            </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={graphData}>
+            <h3 className="text-xl font-semibold mb-4 text-center">Overall Recruitment Status</h3>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={barGraphData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="voters" stroke="#4CAF50" activeDot={{ r: 8 }} name="Voters" />
-                <Line type="monotone" dataKey="voteBoughts" stroke="#17a2b8" activeDot={{ r: 8 }} name="Votes Bought" />
-              </LineChart>
+                <Bar dataKey="value" fill="#17a2b8" />
+              </BarChart>
             </ResponsiveContainer>
           </motion.div>
-
-          {/* Bar Chart for Voters vs Non-Voters */}
+          {/* Line Chart */}
           <motion.div className="bg-white p-4 rounded-lg shadow-lg" whileHover={{ scale: 1.02 }}>
+            <h3 className="text-xl font-semibold mb-4 text-center">Recruitment Per Municipality</h3>
+            <div className="mb-4 text-center">
+              <MunicipalityDropdown onMunicipalityChange={handleMunicipalityChange}/>
+              {/* <select className="border p-2 rounded" value={selectedAddress} onChange={(e) => setSelectedAddress(e.target.value)}>
+                <option value="">All Addresses</option>
+                {Object.keys(groupedData).map((address) => (
+                  <option key={address} value={address}>{address}</option>
+                ))}
+              </select> */}
+            </div>
+            
+          </motion.div>
+
+          <motion.div className="bg-white p-4 rounded-lg shadow-lg" whileHover={{ scale: 1.02 }}>
+            <h3 className="text-xl font-semibold mb-4 text-center">Recruitment Per Municipality</h3>
+            <div className="mb-4 text-center">
+              <MunicipalityDropdown onMunicipalityChange={handleMunicipalityChange}/>
+              {/* <select className="border p-2 rounded" value={selectedAddress} onChange={(e) => setSelectedAddress(e.target.value)}>
+                <option value="">All Addresses</option>
+                {Object.keys(groupedData).map((address) => (
+                  <option key={address} value={address}>{address}</option>
+                ))}
+              </select> */}
+            </div>
+            
+          </motion.div>
+          {/* Bar Chart for Voters vs Non-Voters */}
+          {/* <motion.div className="bg-white p-4 rounded-lg shadow-lg" whileHover={{ scale: 1.02 }}>
             <h3 className="text-xl font-semibold mb-4 text-center">Voter vs Non-Voter</h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={barGraphData}>
@@ -214,22 +216,9 @@ const LandingPage = () => {
                 <Bar dataKey="value" fill="#214252FF" />
               </BarChart>
             </ResponsiveContainer>
-          </motion.div>
+          </motion.div> */}
 
-          {/* Bar Chart for Vote Bought Status */}
-          <motion.div className="bg-white p-4 rounded-lg shadow-lg" whileHover={{ scale: 1.02 }}>
-            <h3 className="text-xl font-semibold mb-4 text-center">Overall Recruitment Status</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={barGraphData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="value" fill="#17a2b8" />
-              </BarChart>
-            </ResponsiveContainer>
-          </motion.div>
+          
         </div>
       </div>
     </div>
