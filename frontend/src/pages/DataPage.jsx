@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -6,42 +6,14 @@ import { InputText } from "primereact/inputtext";
 import { Tag } from "primereact/tag";
 import { Dropdown } from "primereact/dropdown";
 import { FilterMatchMode } from "primereact/api";
+import { fetchAllResidents } from "../services/apiService"; // Import the API method
 import "../css/DataPage.css";
 
 const DataPage = () => {
   const navigate = useNavigate();
 
-  // Temporary dataset for populating the table.
-  const [data] = useState([
-    {
-      id: 1,
-      firstName: "John",
-      middleName: "D.",
-      lastName: "Doe",
-      mobileNum: "123-4567",
-      age: 25,
-      gender: "Male",
-      brgyCode: "Brgy 1",
-      muniCode: "Muni A",
-      voterStatus: true,
-      voteBought: false,
-    },
-    {
-      id: 2,
-      firstName: "Jane",
-      middleName: "M.",
-      lastName: "Smith",
-      mobileNum: "987-6543",
-      age: 30,
-      gender: "Female",
-      brgyCode: "Brgy 2",
-      muniCode: "Muni B",
-      voterStatus: true,
-      voteBought: true,
-    },
-  ]);
-
-  // Filters state for managing table filtering options.
+  // State to hold fetched residents' data
+  const [residentsData, setResidentsData] = useState([]);
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     firstName: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -54,9 +26,22 @@ const DataPage = () => {
     muniCode: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
 
-  const [globalFilterValue, setGlobalFilterValue] = useState(""); // Stores the value of the global search filter.
+  const [globalFilterValue, setGlobalFilterValue] = useState(""); // Global filter input value
 
-  // Handles changes in the global filter input.
+  // Fetch residents' data on component mount
+  useEffect(() => {
+    const fetchResidentsData = async () => {
+      try {
+        const data = await fetchAllResidents();
+        setResidentsData(data); // Set the fetched data to state
+      } catch (error) {
+        console.error("Error fetching residents data:", error);
+      }
+    };
+
+    fetchResidentsData();
+  }, []);
+
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
     setFilters((prevFilters) => ({
@@ -66,7 +51,6 @@ const DataPage = () => {
     setGlobalFilterValue(value);
   };
 
-  // Renders the search input field in the table header.
   const renderHeader = () => (
     <div className="flex justify-content-end">
       <span className="p-input-icon-left">
@@ -81,7 +65,6 @@ const DataPage = () => {
     </div>
   );
 
-  // Formats the voter registration status with a tag.
   const statusTemplate = (status) => (
     <Tag
       value={status ? "Registered" : "Not Yet"}
@@ -89,7 +72,6 @@ const DataPage = () => {
     />
   );
 
-  // Formats the vote payment status with a tag.
   const voteBoughtTemplate = (status) => (
     <Tag
       value={status ? "Paid" : "Not Yet"}
@@ -97,7 +79,6 @@ const DataPage = () => {
     />
   );
 
-  // Renders a dropdown filter for voter status.
   const voterStatusFilterTemplate = (options) => (
     <Dropdown
       value={options.value}
@@ -112,7 +93,6 @@ const DataPage = () => {
     />
   );
 
-  // Renders a dropdown filter for vote payment status.
   const voteBoughtFilterTemplate = (options) => (
     <Dropdown
       value={options.value}
@@ -127,22 +107,21 @@ const DataPage = () => {
     />
   );
 
-  // Navigates to the profile page of the clicked row.
   const handleRowClick = (rowData) => {
-    navigate(`/profile/${rowData.id}`);
+    navigate(`/profile/${rowData.id}`, { state: { user: rowData } });
   };
+  
 
   return (
     <div className="container mx-auto p-4">
-      {/* Card container for the table */}
       <div className="card table-container overflow-x-auto">
         <DataTable
-          value={data}
+          value={residentsData} // Use fetched data here
           paginator
           rows={20}
-          header={renderHeader()} 
-          filters={filters} 
-          filterDisplay="row" 
+          header={renderHeader()}
+          filters={filters}
+          filterDisplay="row"
           globalFilterFields={[
             "firstName",
             "lastName",
@@ -150,13 +129,12 @@ const DataPage = () => {
             "mobileNum",
             "brgyCode",
             "muniCode",
-          ]} 
+          ]}
           emptyMessage="No records found."
-          scrollable 
+          scrollable
           scrollHeight="flex"
-          onRowClick={(e) => handleRowClick(e.data)} 
+          onRowClick={(e) => handleRowClick(e.data)}
         >
-          {/* Table columns */}
           <Column
             header="Name"
             body={(rowData) =>
@@ -167,10 +145,7 @@ const DataPage = () => {
             filterField="firstName"
             filterMenuStyle={{ width: "12rem" }}
             showFilterMenu={false}
-            headerClassName="text-center"
-          
           />
-
           <Column
             header="Address"
             body={(rowData) => `${rowData.brgyCode} ${rowData.muniCode}`}
@@ -179,14 +154,8 @@ const DataPage = () => {
             filterField="brgyCode"
             filterMenuStyle={{ width: "12rem" }}
             showFilterMenu={false}
-          
           />
-
-          <Column
-            field="mobileNum"
-            header="Mobile Number"
-          
-          />
+          <Column field="mobileNum" header="Mobile Number" />
           <Column field="age" header="Age" />
           <Column field="gender" header="Gender" />
           <Column
@@ -196,7 +165,6 @@ const DataPage = () => {
             filter
             filterElement={voterStatusFilterTemplate}
             showFilterMenu={false}
-          
           />
           <Column
             field="voteBought"
@@ -205,7 +173,6 @@ const DataPage = () => {
             filter
             filterElement={voteBoughtFilterTemplate}
             showFilterMenu={false}
-          
           />
         </DataTable>
       </div>
