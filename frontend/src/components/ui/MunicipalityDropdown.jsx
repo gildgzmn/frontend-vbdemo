@@ -106,7 +106,7 @@ const MunicipalityDropdown = ({ onMunicipalityChange }) => {
       // Pass the selected municipality code to the parent component
       onMunicipalityChange(selectedOption.value); // Assuming value holds the code
       try {
-        const response = await LocStatService.getStatsByMuni(selectedOption.value);
+        const response = await LocStatService.getStatsByMuni(selectedOption.label);
         const { data /* Assuming data structure from service */ } = response.data; // Replace with actual data structure
         console.log(response.data);
 
