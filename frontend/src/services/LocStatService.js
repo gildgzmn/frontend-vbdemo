@@ -23,6 +23,17 @@ class LocStatService {
       throw error;
     }
   }
+
+  //localhost:8080/stats/percent-per-muni
+  static async getStatsMain() {
+    try {
+      const response = await axios.get(`${this.baseUrl}/percent-per-muni`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      throw error;
+    }
+  }
  
 
 }
