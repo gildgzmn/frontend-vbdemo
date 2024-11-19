@@ -74,9 +74,6 @@ export const importResidentData = async (data) => {
   }
 };
 
-
-
-
 // Fetch residents by barangay code
 export const fetchResidentsByBarangay = async (brgyCode) => {
   try {
@@ -110,5 +107,15 @@ export const fetchResidentsByMunicipality = async (muniCode) => {
   }
 };
 
+// Fetch residents by municipality code and export to excel
+export const exportBrgyResidentToExcelBulk = async (muniCode) => {
+  try {
+    const response = await apiClient.post(`export/resident/muni/${muniCode}/brgy/bulk`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching residents for municipality ${muniCode}:`, error);
+    throw error;
+  }
+};
 
 export default apiClient;

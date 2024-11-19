@@ -5,6 +5,7 @@ import LandingPage from './pages/LandingPage';
 import ProfilePage from "./pages/ProfilePage";
 import Navbar from './components/ui/navbar';
 import Footer from './components/ui/footer';
+import UtilitiesPage from './pages/UtilitiesPage';
 
 function App() {
   
@@ -21,6 +22,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/data" element={<DataPage />} />
         <Route path="/profile/:id" element={<ProfilePage data={data} />} />
+        <Route path="/utilities" element={<UtilitiesPage/>}/>
       </Routes>
       <Footer />
     </BrowserRouter>
