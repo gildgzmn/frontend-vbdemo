@@ -6,7 +6,11 @@ import { InputText } from "primereact/inputtext";
 import { Tag } from "primereact/tag";
 import { Dropdown } from "primereact/dropdown";
 import { FilterMatchMode } from "primereact/api";
-import { fetchAllResidents } from "../services/apiService"; // Import the API method
+import {
+  fetchAllResidents,
+  fetchAllMunicipalities,
+  fetchAllBarangays,
+} from "../services/apiService";
 import "../css/DataPage.css";
 
 const DataPage = () => {
@@ -20,27 +24,70 @@ const DataPage = () => {
     lastName: { value: null, matchMode: FilterMatchMode.CONTAINS },
     middleName: { value: null, matchMode: FilterMatchMode.CONTAINS },
     mobileNum: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    voterStatus: { value: null, matchMode: FilterMatchMode.EQUALS },
-    voteBought: { value: null, matchMode: FilterMatchMode.EQUALS },
+    isVoter: { value: null, matchMode: FilterMatchMode.EQUALS },
+    vbFlag: { value: null, matchMode: FilterMatchMode.EQUALS },
     brgyCode: { value: null, matchMode: FilterMatchMode.CONTAINS },
     muniCode: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
 
-  const [globalFilterValue, setGlobalFilterValue] = useState(""); // Global filter input value
+  const [globalFilterValue, setGlobalFilterValue] = useState("");
+  const [municipalities, setMunicipalities] = useState([]);
+  const [selectedMunicipality, setSelectedMunicipality] = useState(null);
+  const [municipalityMap, setMunicipalityMap] = useState({});
+  const [barangays, setBarangays] = useState([]);
+  const [selectedBarangay, setSelectedBarangay] = useState(null);
 
   // Fetch residents' data on component mount
   useEffect(() => {
     const fetchResidentsData = async () => {
       try {
         const data = await fetchAllResidents();
-        setResidentsData(data); // Set the fetched data to state
+        setResidentsData(data);
       } catch (error) {
         console.error("Error fetching residents data:", error);
       }
     };
 
+    const fetchMunicipalitiesData = async () => {
+      try {
+        const data = await fetchAllMunicipalities();
+        setMunicipalities(data);
+
+        const municipalityMap = data.reduce((acc, muni) => {
+          acc[muni.citymunCode] = muni;
+          return acc;
+        }, {});
+        setMunicipalityMap(municipalityMap);
+      } catch (error) {
+        console.error("Error fetching municipalities:", error);
+      }
+    };
+
+    fetchMunicipalitiesData();
     fetchResidentsData();
   }, []);
+
+  useEffect(() => {
+    if (selectedMunicipality) {
+      const fetchBarangaysData = async () => {
+        try {
+          const data = await fetchAllBarangays();
+          const filteredBarangays = data.filter(
+            (brgy) => brgy.cityCode === selectedMunicipality
+          );
+          setBarangays(filteredBarangays);
+        } catch (error) {
+          console.error("Error fetching barangays:", error);
+        }
+      };
+
+      fetchBarangaysData();
+    } else {
+      // Clear the barangay dropdown when municipality is reset
+      setBarangays([]);
+      setSelectedBarangay(null);
+    }
+  }, [selectedMunicipality]);
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
@@ -52,16 +99,41 @@ const DataPage = () => {
   };
 
   const renderHeader = () => (
-    <div className="flex justify-content-end">
+    <div>
+      <h1 className="text-center text-5xl font-bold mb-6 mt-4">RESIDENTS DATA TABLE</h1>
       <span className="p-input-icon-left">
         <i className="pi pi-search" />
         <InputText
           value={globalFilterValue}
           onChange={onGlobalFilterChange}
-          placeholder="Keyword Search"
+          placeholder="Global Search may bug pa yung mga search"
           className="small-search"
         />
       </span>
+      <Dropdown
+        value={selectedMunicipality}
+        options={municipalities.map((m) => ({
+          label: m.citymunDesc,
+          value: m.citymunCode,
+        }))}
+        onChange={(e) => setSelectedMunicipality(e.value)}
+        placeholder="Select Municipality"
+        className="mun-dropdown mun-dropdown-panel mun-dropdown-item"
+        showClear
+      />
+
+      <Dropdown
+        value={selectedBarangay}
+        options={barangays.map((b) => ({
+          label: b.brgyDesc,
+          value: b.brgyCode,
+        }))}
+        onChange={(e) => setSelectedBarangay(e.value)}
+        placeholder="Select Barangay"
+        className="mun-dropdown mun-dropdown-panel mun-dropdown-item"
+        showClear
+        emptyMessage="Please select a Municipality first"
+      />
     </div>
   );
 
@@ -110,13 +182,12 @@ const DataPage = () => {
   const handleRowClick = (rowData) => {
     navigate(`/profile/${rowData.id}`, { state: { user: rowData } });
   };
-  
 
   return (
     <div className="container mx-auto p-4">
       <div className="card table-container overflow-x-auto">
         <DataTable
-          value={residentsData} // Use fetched data here
+          value={residentsData}
           paginator
           rows={20}
           header={renderHeader()}
@@ -148,7 +219,12 @@ const DataPage = () => {
           />
           <Column
             header="Address"
-            body={(rowData) => `${rowData.brgyCode} ${rowData.muniCode}`}
+            body={(rowData) => {
+              const municipality = municipalityMap[rowData.muniCode];
+              return municipality
+                ? `${rowData.brgyCode}, ${municipality.citymunDesc}, ${municipality.provDesc}`
+                : "Unknown";
+            }}
             filter
             filterPlaceholder="Search by address"
             filterField="brgyCode"
@@ -159,17 +235,17 @@ const DataPage = () => {
           <Column field="age" header="Age" />
           <Column field="gender" header="Gender" />
           <Column
-            field="voterStatus"
+            field="isVoter"
             header="Registration Status"
-            body={(rowData) => statusTemplate(rowData.voterStatus)}
+            body={(rowData) => statusTemplate(rowData.isVoter)}
             filter
             filterElement={voterStatusFilterTemplate}
             showFilterMenu={false}
           />
           <Column
-            field="voteBought"
+            field="vbFlag"
             header="Payment Status"
-            body={(rowData) => voteBoughtTemplate(rowData.voteBought)}
+            body={(rowData) => voteBoughtTemplate(rowData.vbFlag)}
             filter
             filterElement={voteBoughtFilterTemplate}
             showFilterMenu={false}

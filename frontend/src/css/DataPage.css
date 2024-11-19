@@ -1,3 +1,18 @@
+
+body {
+  background-color: #f5f5f5;
+  background-image: linear-gradient(90deg, #eaeaea 1px, transparent 2px),
+                    linear-gradient(90deg, #eaeaea 1px, transparent 2px);
+  background-size: 5px 5px;
+  background-position: top left;
+  min-height: 100vh;
+  margin: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1; /* Ensures the content is above the grid background */
+}
 /* Main Card Container */
 .card {
   background-color: #f5f5f5;
@@ -11,13 +26,13 @@
 }
 
 
-
 /* Table Styles */
 .p-datatable { 
   border: 3px solid #d1d1d1;
   border-radius: 8px;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
   background-color: #ffffff;
+  text-align: center;
 
 }
 
@@ -47,7 +62,9 @@
 }
 
 .p-datatable-tbody > tr:hover {
-  background-color: #f7f7f7;
+  background-color: #eaeaea;
+            
+  cursor: pointer;  
 }
 
 /* Adjusted Search Bar */
@@ -56,11 +73,12 @@
   border: 1px solid #cccccc;
   color: #333333;
   border-radius: 6px;
-  width: 100%;
-  max-width: 500px; /* Max width to prevent it from becoming too wide */
+  width: 400px; 
   font-size: 0.9rem;
   padding: 0.5rem 0.75rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
   box-sizing: border-box;
+  font-weight: 600;
 }
 
 
@@ -69,10 +87,11 @@
   border: 1px solid #cccccc;
   color: #615858;
   border-radius: 6px;
-  width: 200px; /* Adjust width if needed */
+  width: 275px;
   padding: 0.5rem;
   font-size: 0.9rem;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  font-weight: 600;
 }
 
 .p-datatable-thead > tr > th:nth-child(2) .p-inputtext:focus {
@@ -90,7 +109,7 @@
   border: 1px solid #cccccc;
   color: #615858;
   border-radius: 6px;
-  width: 200px; /* Adjust width if needed */
+  width: 275px; 
   padding: 0.5rem;
   font-size: 0.9rem;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -110,52 +129,80 @@
   color: #aaaaaa;
 }
 
-/* Dropdown Visibility and Borders */
+
 .p-column-filter .p-dropdown {
   width: 170px;
-  padding: 0.5rem 0.5rem;
+  padding: 0.5rem;
   border: 1px solid #cccccc;
   background-color: #ffffff;
   color: #333333;
   border-radius: 6px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .p-dropdown-panel .p-dropdown-item {
-  background-color: #ffffff; /* Background color for dropdown items */
+  background-color: #ffffff;
   color: #333333;
+  font-weight: 500;
+  border: 1px solid #eeeeee;
+  border-radius: 2px;
   text-align: center;
+  padding: 0.5rem 0.75rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.mun-dropdown{
+  width: 300px;
+  margin-left: 10px;
+  padding: 0.45rem 0.75rem;
+  font-weight: 600;
+  border: 1px solid #cccccc;
+  background-color: #ffffff;
+  color: #333333;
+  border-radius: 6px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.p-dropdown-panel .p-dropdown-item:hover {
+  background-color: #eaeaea;
+  color: #81b4ea;            
+  cursor: pointer;          
 }
 
 /* Tag Styles */
 .p-tag-success {
-  background-color: #28a745;
+  background-color: #1aa244;
   color: #ffffff;
   font-weight: 600;
-  border-radius: 16px; 
+  border-radius: 20px; 
+  width: 100px;
   padding: 0.25rem 0.5rem;
 }
 
 .p-tag-warning {
-  background-color: #ffbc00;
+  background-color: #fdbf00;
   color: #ffffff;
   font-weight: 600;
-  border-radius: 16px; 
+  width: 100px;
+  border-radius: 20px; 
   padding: 0.25rem 0.5rem;
 }
 
 .p-tag-danger {
-  background-color: #17a2b8;
+  background-color: #1aa244;
   color: #ffffff;
   font-weight: 600;
-  border-radius: 16px; 
+  border-radius: 20px; 
+  width: 100px;
   padding: 0.25rem 0.5rem;
 }
 
 .p-tag-info {
-  background-color: #dc3545;
+  background-color: #dd3d43;
   color: #ffffff;
   font-weight: 600;
-  border-radius: 16px; 
+  border-radius: 20px;
+  width: 100px; 
   padding: 0.25rem 0.5rem;
 }
 
@@ -167,7 +214,7 @@
   background-color: #eaeaea;
   border-top: 1px solid #d1d1d1;
   border-radius: 0 0 8px 8px;
-  padding: 0.5rem;
+  padding: 0.75rem;
 }
 
 .p-paginator .p-paginator-page {
@@ -190,4 +237,18 @@
 
 .p-paginator .p-paginator-icon:hover {
   color: #28a745;
+}
+
+
+.p-dropdown-empty-message {
+  background-color: #ffffff; 
+  color: #721c24;
+  padding: 10px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+h1 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
 }
