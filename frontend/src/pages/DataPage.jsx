@@ -42,19 +42,39 @@ const DataPage = () => {
     const fetchResidentsData = async () => {
       try {
         const data = await fetchAllResidents();
-        setResidentsData(data);
+        console.log("Residents Data:", data);
+  
+        // Normalize muniCode to uppercase
+        const normalizedData = data.map((resident) => ({
+          ...resident,
+          muniCode: resident.muniCode?.toUpperCase(), // Ensure consistency
+        }));
+        setResidentsData(normalizedData);
+  
+        // Validate municipality mapping
+        console.log("Municipality Map:", municipalityMap);
+        normalizedData.forEach((resident) => {
+          if (!resident.muniCode) {
+            console.warn(`Resident ID ${resident.id} has no muniCode.`);
+          } else if (!municipalityMap[resident.muniCode]) {
+            console.warn(
+              `No municipality found for muniCode: ${resident.muniCode} (Resident ID: ${resident.id})`
+            );
+          }
+        });
       } catch (error) {
         console.error("Error fetching residents data:", error);
       }
     };
-
+  
     const fetchMunicipalitiesData = async () => {
       try {
         const data = await fetchAllMunicipalities();
+        console.log("Municipalities Data:", data);
+  
         setMunicipalities(data);
-
         const municipalityMap = data.reduce((acc, muni) => {
-          acc[muni.citymunCode] = muni;
+          acc[muni.citymunDesc.toUpperCase()] = muni; 
           return acc;
         }, {});
         setMunicipalityMap(municipalityMap);
@@ -62,10 +82,11 @@ const DataPage = () => {
         console.error("Error fetching municipalities:", error);
       }
     };
-
+  
     fetchMunicipalitiesData();
     fetchResidentsData();
   }, []);
+  
 
   useEffect(() => {
     if (selectedMunicipality) {
@@ -100,13 +121,16 @@ const DataPage = () => {
 
   const renderHeader = () => (
     <div>
-      <h1 className="text-center text-5xl font-bold mb-6 mt-4">RESIDENTS DATA TABLE</h1>
+      <h1 className="text-center text-5xl font-bold mb-6 mt-6">
+        RESIDENTS DATA TABLE
+      </h1>
+      <hr className="my-6 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-500 to-transparent dark:opacity-100" />
       <span className="p-input-icon-left">
         <i className="pi pi-search" />
         <InputText
           value={globalFilterValue}
           onChange={onGlobalFilterChange}
-          placeholder="Global Search may bug pa yung mga search"
+          placeholder="Global Search"
           className="small-search"
         />
       </span>
@@ -130,10 +154,12 @@ const DataPage = () => {
         }))}
         onChange={(e) => setSelectedBarangay(e.value)}
         placeholder="Select Barangay"
-        className="mun-dropdown mun-dropdown-panel mun-dropdown-item"
+        className="mun-dropdown mun-dropdown-panel mun-dropdown-item mb-5"
         showClear
         emptyMessage="Please select a Municipality first"
       />
+
+      
     </div>
   );
 
@@ -221,9 +247,9 @@ const DataPage = () => {
             header="Address"
             body={(rowData) => {
               const municipality = municipalityMap[rowData.muniCode];
-              return municipality
-                ? `${rowData.brgyCode}, ${municipality.citymunDesc}, ${municipality.provDesc}`
-                : "Unknown";
+              const provDesc = municipality ? municipality.provDesc : "Unknown Province";
+              
+              return `${rowData.brgyCode}, ${rowData.muniCode}, ${provDesc}`;
             }}
             filter
             filterPlaceholder="Search by address"

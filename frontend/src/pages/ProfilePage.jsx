@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import "../css/ProfilePage.css";
+import Profile from "../assets/profile.png";
 
 const ProfilePage = () => {
   const { id } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState(location.state?.user || null);
 
   useEffect(() => {
@@ -38,18 +40,19 @@ const ProfilePage = () => {
     setNewPhone(user.mobileNum);
   };
 
+  const handleBackButtonClick = () => {
+    navigate("/data"); // Redirect back to DataPage
+  };
+
   return (
     <div className="profile-page-container">
       <div className="profile-page">
         <header className="profile-header">
           <div className="profile-avatar-wrapper">
-            <img
-              src={user.profileImage || "default-avatar.png"}
-              alt={`${user.firstName} ${user.lastName}`}
-              className="profile-avatar"
-            />
+            <img src={Profile} alt="Profile" className="profile-avatar" />
           </div>
-          <h2 className="profile-name">{`${user.firstName} ${user.middleName} ${user.lastName}`}</h2>
+          <hr className="my-12 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-500 to-transparent  dark:opacity-100" />
+          <h1 className="header-pname">{`${user.firstName} ${user.middleName} ${user.lastName}`}</h1>
         </header>
 
         <section className="profile-details">
@@ -61,6 +64,88 @@ const ProfilePage = () => {
               readOnly
               className="readonly-input"
             />
+          </div>
+
+          <div className="detail-section">
+            <label>Address</label>
+            <input
+              type="text"
+              value={`${user.brgyCode}, ${user.muniCode}, BATANGAS`}
+              readOnly
+              className="readonly-input"
+            />
+          </div>
+
+          <div className="detail-section">
+            <label>Age</label>
+            <input
+              type="text"
+              value={user.age || "N/A"}
+              readOnly
+              className="readonly-input"
+            />
+          </div>
+
+          <div className="detail-section">
+            <label>Gender</label>
+            <input
+              type="text"
+              value={user.gender || "N/A"}
+              readOnly
+              className="readonly-input"
+            />
+          </div>
+
+          <div className="detail-section">
+            <label>Registration Status</label>
+            {isEditing ? (
+              <select
+                value={user.isVoter ? "Registered" : "Not Registered"}
+                onChange={(e) =>
+                  setUser((prev) => ({
+                    ...prev,
+                    isVoter: e.target.value === "Registered",
+                  }))
+                }
+                className="editable-input"
+              >
+                <option value="Registered">Registered</option>
+                <option value="Not Registered">Not Registered</option>
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={user.isVoter ? "Registered" : "Not Registered"}
+                readOnly
+                className="readonly-input"
+              />
+            )}
+          </div>
+
+          <div className="detail-section">
+            <label>Payment Status</label>
+            {isEditing ? (
+              <select
+                value={user.vbFlag ? "Paid" : "Not Paid"}
+                onChange={(e) =>
+                  setUser((prev) => ({
+                    ...prev,
+                    vbFlag: e.target.value === "Paid",
+                  }))
+                }
+                className="editable-input"
+              >
+                <option value="Paid">Paid</option>
+                <option value="Not Paid">Not Paid</option>
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={user.vbFlag ? "Paid" : "Not Paid"}
+                readOnly
+                className="readonly-input"
+              />
+            )}
           </div>
 
           <div className="detail-section">
@@ -96,17 +181,11 @@ const ProfilePage = () => {
               </>
             )}
           </div>
-
-          <div className="detail-section">
-            <label>Address</label>
-            <input
-              type="text"
-              value={`${user.brgyCode} ${user.muniCode}`}
-              readOnly
-              className="readonly-input"
-            />
-          </div>
         </section>
+
+        <button onClick={handleBackButtonClick} className="back-button">
+          Back to Residents List
+        </button>
       </div>
     </div>
   );
