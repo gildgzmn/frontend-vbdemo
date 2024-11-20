@@ -1,14 +1,16 @@
 /* Profile Page Container */
 .profile-page-container {
-  min-height: calc(100vh - 120px); /* Adjust to avoid overlap with header and footer */
-
+  min-height: calc(100vh - 120px);
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 20px;
 }
 
 /* Profile Page Styling */
 .profile-page {
+  margin-top: 120px;
+  margin-bottom: 40px;
   max-width: 600px;
   width: 100%;
   background-color: #e1e1e1;
@@ -17,22 +19,32 @@
   overflow: hidden;
 }
 
-/* Header Section */
-.header {
+
+.header-pname {
   text-align: center;
-  background-color: #1b1b1b;
-  color: white;
-  padding: 20px;
+  font-family: Poppins, sans-serif;
+  font-size: 30px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.profile-avatar-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+  margin-bottom: 20px;
+  margin-top: 40px;
 }
 
 .profile-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  border-radius: 100%;
   margin-bottom: 10px;
 }
 
-/* Profile Details Section */
 .profile-details {
   padding: 20px;
 }
@@ -45,21 +57,81 @@ label {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
+  margin-left: 81px;
+  font-size: 16px;
 }
 
-.readonly-input,
-.editable-input {
-  width: 100%;
+.readonly-input {
+  width: 80%;
+  max-width: 400px;
   padding: 10px;
   font-size: 14px;
   border-radius: 5px;
-  border: 1px solid #ccc;
-  background-color: #f7f7f7;
+  border: 1px solid #ccc; /* Light gray border */
+  background-color: #f0f0f0; /* Lighter background color */
+  margin: 0 auto;
+  display: block;
+  cursor: not-allowed; /* Indicate that it's not editable */
+  color: #777; /* Lighter text color */
 }
 
 .editable-input {
+  width: 80%;
+  max-width: 400px;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 5px;
+  border: 1px solid #81b4ea;
   background-color: white;
-  border-color: #007bff;
+  margin: 0 auto;
+  display: block;
+}
+
+.select-input {
+  width: 80%;
+  max-width: 400px;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 5px;
+  border: 1px solid #81b4ea;
+  background-color: white;
+  margin: 0 auto;
+  display: block;
+}
+
+.edit-dropdown{
+  width: 80%;
+  max-width: 400px;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #cccccc;
+  background-color: #ffffff;
+  color: #333333;
+  border-radius: 6px;
+  margin: 0 auto;
+  display: block;
+}
+
+.p-editdropdown-panel .p-editdropdown-item {
+  background-color: #ffffff;
+  color: #333333;
+  font-weight: 500;
+  border: 1px solid #eeeeee;
+  border-radius: 2px;
+  text-align: center;
+  padding: 0.5rem 0.75rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.p-editdropdown-panel .p-editdropdown-item:hover {
+  background-color: #eaeaea;
+  color: #181c24;            
+  cursor: pointer;          
+}
+
+
+.editable-input:focus {
+  border-color: #181c24; /* Focus border color */
 }
 
 /* Button Styles */
@@ -80,6 +152,7 @@ label {
   border-radius: 5px;
   cursor: pointer;
   color: white;
+  margin-top: 20px;
 }
 
 .save-button {
@@ -91,14 +164,50 @@ label {
 }
 
 .edit-button {
-  background-color: #007bff;
+  background-color: #131e35;
+  margin-left: 395px;
+  padding: 10px 30px;
 }
 
-/* Footer Section */
-.footer {
-  text-align: center;
-  font-size: 14px;
-  padding: 15px;
-  background-color: #1b1b1b;
-  color: #ffffff;
+
+.save-button:hover{
+  background-color: #81ea9b;
+  transition: background-color 0.5s ease, color 0.5s ease;
+  color: #131e35;
 }
+
+.cancel-button:hover{
+  background-color: #ea8181;
+  transition: background-color 0.5s ease, color 0.5s ease;
+  color: #131e35;
+}
+
+.edit-button:hover {
+  background-color: #81b4ea;
+  transition: background-color 0.5s ease, color 0.5s ease;
+  color: #131e35;
+}
+
+.back-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  background-color: #131e35;
+  color: white;
+  cursor: pointer;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.back-button:hover {
+  background-color: #81b4ea;
+  transition: background-color 0.5s ease, color 0.5s ease;
+  color: #131e35;
+}
+
+
+
+
+
