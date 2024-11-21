@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { InputText } from "primereact/inputtext";
@@ -12,10 +12,11 @@ import {
   fetchAllBarangays,
 } from "../services/apiService";
 import "../css/DataPage.css";
+import { Button } from "@headlessui/react";
 
 const DataPage = () => {
   const navigate = useNavigate();
-
+  const location = useLocation();
   // State to hold fetched residents' data
   const [residentsData, setResidentsData] = useState([]);
   const [filters, setFilters] = useState({
@@ -24,7 +25,7 @@ const DataPage = () => {
     lastName: { value: null, matchMode: FilterMatchMode.CONTAINS },
     middleName: { value: null, matchMode: FilterMatchMode.CONTAINS },
     mobileNum: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    isVoter: { value: null, matchMode: FilterMatchMode.EQUALS },
+    voter: { value: null, matchMode: FilterMatchMode.EQUALS },
     vbFlag: { value: null, matchMode: FilterMatchMode.EQUALS },
     brgyCode: { value: null, matchMode: FilterMatchMode.CONTAINS },
     muniCode: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -37,20 +38,31 @@ const DataPage = () => {
   const [barangays, setBarangays] = useState([]);
   const [selectedBarangay, setSelectedBarangay] = useState(null);
 
+  useEffect(() => {
+    const updatedResident = location.state?.updatedResident;
+    if (updatedResident) {
+      setResidentsData((prevData) =>
+        prevData.map((resident) =>
+          resident.id === updatedResident.id ? updatedResident : resident
+        )
+      );
+    }
+  }, [location.state]);
+
   // Fetch residents' data on component mount
   useEffect(() => {
     const fetchResidentsData = async () => {
       try {
         const data = await fetchAllResidents();
         console.log("Residents Data:", data);
-  
+
         // Normalize muniCode to uppercase
         const normalizedData = data.map((resident) => ({
           ...resident,
           muniCode: resident.muniCode?.toUpperCase(), // Ensure consistency
         }));
         setResidentsData(normalizedData);
-  
+
         // Validate municipality mapping
         console.log("Municipality Map:", municipalityMap);
         normalizedData.forEach((resident) => {
@@ -66,15 +78,15 @@ const DataPage = () => {
         console.error("Error fetching residents data:", error);
       }
     };
-  
+
     const fetchMunicipalitiesData = async () => {
       try {
         const data = await fetchAllMunicipalities();
         console.log("Municipalities Data:", data);
-  
+
         setMunicipalities(data);
         const municipalityMap = data.reduce((acc, muni) => {
-          acc[muni.citymunDesc.toUpperCase()] = muni; 
+          acc[muni.citymunDesc.toUpperCase()] = muni;
           return acc;
         }, {});
         setMunicipalityMap(municipalityMap);
@@ -82,11 +94,10 @@ const DataPage = () => {
         console.error("Error fetching municipalities:", error);
       }
     };
-  
+
     fetchMunicipalitiesData();
     fetchResidentsData();
   }, []);
-  
 
   useEffect(() => {
     if (selectedMunicipality) {
@@ -159,7 +170,12 @@ const DataPage = () => {
         emptyMessage="Please select a Municipality first"
       />
 
-      
+      <button
+        onClick={() => navigate("/add-resident")}
+        className="add-button"
+      >
+        Add Resident
+      </button>
     </div>
   );
 
@@ -247,8 +263,10 @@ const DataPage = () => {
             header="Address"
             body={(rowData) => {
               const municipality = municipalityMap[rowData.muniCode];
-              const provDesc = municipality ? municipality.provDesc : "Unknown Province";
-              
+              const provDesc = municipality
+                ? municipality.provDesc
+                : "Unknown Province";
+
               return `${rowData.brgyCode}, ${rowData.muniCode}, ${provDesc}`;
             }}
             filter
@@ -261,9 +279,9 @@ const DataPage = () => {
           <Column field="age" header="Age" />
           <Column field="gender" header="Gender" />
           <Column
-            field="isVoter"
+            field="voter"
             header="Registration Status"
-            body={(rowData) => statusTemplate(rowData.isVoter)}
+            body={(rowData) => statusTemplate(rowData.voter)}
             filter
             filterElement={voterStatusFilterTemplate}
             showFilterMenu={false}

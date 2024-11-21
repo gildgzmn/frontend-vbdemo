@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import "../css/ProfilePage.css";
 import Profile from "../assets/profile.png";
+import { updateResident } from "../services/apiService";
 
 const ProfilePage = () => {
   const { id } = useParams();
@@ -31,10 +32,29 @@ const ProfilePage = () => {
   if (!user) return <p>Loading...</p>;
 
   const handleEditClick = () => setIsEditing(true);
-  const handleSaveClick = () => {
+  const handleSaveClick = async () => {
     setIsEditing(false);
-    setUser((prev) => ({ ...prev, mobileNum: newPhone }));
+
+    const updatedUser = {
+      ...user,
+      mobileNum: newPhone,
+      voter: user.voter,
+      vbFlag: user.vbFlag,
+    };
+
+    try {
+      const response = await updateResident(updatedUser);
+      console.log("Resident updated successfully:", response);
+
+      
+      setUser(response.data || updatedUser);
+      alert("Resident updated successfully!");
+    } catch (error) {
+      console.error("Error updating resident:", error);
+      alert("Failed to update resident. Please try again.");
+    }
   };
+
   const handleCancelClick = () => {
     setIsEditing(false);
     setNewPhone(user.mobileNum);
@@ -100,13 +120,17 @@ const ProfilePage = () => {
             <label>Registration Status</label>
             {isEditing ? (
               <select
-                value={user.isVoter ? "Registered" : "Not Registered"}
-                onChange={(e) =>
-                  setUser((prev) => ({
-                    ...prev,
-                    isVoter: e.target.value === "Registered",
-                  }))
-                }
+                value={user.voter ? "Registered" : "Not Registered"}
+                onChange={(e) => {
+                  setUser((prev) => {
+                    const updatedUser = {
+                      ...prev,
+                      voter: e.target.value === "Registered",
+                    };
+                    console.log("Updated User:", updatedUser); // Debug log
+                    return updatedUser;
+                  });
+                }}
                 className="editable-input"
               >
                 <option value="Registered">Registered</option>
@@ -115,7 +139,7 @@ const ProfilePage = () => {
             ) : (
               <input
                 type="text"
-                value={user.isVoter ? "Registered" : "Not Registered"}
+                value={user.voter ? "Registered" : "Not Registered"}
                 readOnly
                 className="readonly-input"
               />
