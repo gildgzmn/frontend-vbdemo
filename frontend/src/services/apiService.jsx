@@ -128,12 +128,12 @@ export const updateResident = async (residentData) => {
   }
 };
 
-export const addResident = async (resident) => {
+export const createResident = async (residentData) => {
   try {
-    const response = await apiClient.post('/resident/create', resident);
+    const response = await apiClient.post('/resident/create', residentData);
     return response.data;
   } catch (error) {
-    console.error('Error updating resident:', error);
+    console.error('Error creating resident:', error);
     throw error;
   }
 };

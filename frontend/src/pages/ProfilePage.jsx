@@ -4,6 +4,32 @@ import "../css/ProfilePage.css";
 import Profile from "../assets/profile.png";
 import { updateResident } from "../services/apiService";
 
+const Modal = ({ isOpen, onClose, onConfirm, message, showActions = true }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="modal-overlay">
+      <div className="modal-container">
+        <p>{message}</p>
+        {showActions && (
+          <div className="modal-buttons">
+            <button onClick={onConfirm} className="confirm-button">
+              Confirm
+            </button>
+            <button onClick={onClose} className="cancel2-button">
+              Cancel
+            </button>
+          </div>
+        )}
+        {!showActions && (
+          <button onClick={onClose} className="close-button">
+            Close
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ProfilePage = () => {
   const { id } = useParams();
   const location = useLocation();
@@ -28,36 +54,56 @@ const ProfilePage = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [newPhone, setNewPhone] = useState(user?.mobileNum || "");
+  const [isModalOpen, setIsModalOpen] = useState(false); // Confirmation modal
+  const [feedbackModal, setFeedbackModal] = useState({
+    isOpen: false,
+    message: "",
+  }); // Feedback modal
+  const [updatedUser, setUpdatedUser] = useState(null); // Temporary user data for confirmation
 
   if (!user) return <p>Loading...</p>;
 
   const handleEditClick = () => setIsEditing(true);
-  const handleSaveClick = async () => {
-    setIsEditing(false);
-
-    const updatedUser = {
+  const handleSaveClick = () => {
+    const updatedUserData = {
       ...user,
       mobileNum: newPhone,
       voter: user.voter,
       vbFlag: user.vbFlag,
     };
+    setUpdatedUser(updatedUserData); // Save changes temporarily
+    setIsModalOpen(true); // Open the modal
+  };
+
+  const handleConfirmSave = async () => {
+    setIsModalOpen(false);
+    setIsEditing(false);
 
     try {
       const response = await updateResident(updatedUser);
-      console.log("Resident updated successfully:", response);
-
-      
-      setUser(response.data || updatedUser);
-      alert("Resident updated successfully!");
+      setUser(response.data || updatedUser); // Update user data
+      setFeedbackModal({
+        isOpen: true,
+        message: "Resident's profile has been updated successfully!",
+      });
     } catch (error) {
-      console.error("Error updating resident:", error);
-      alert("Failed to update resident. Please try again.");
+      setFeedbackModal({
+        isOpen: true,
+        message:
+          "An error occurred while updating the profile. Please try again.",
+      });
     }
   };
 
   const handleCancelClick = () => {
     setIsEditing(false);
     setNewPhone(user.mobileNum);
+    setUser((prevUser) => ({
+      ...prevUser,
+      voter: location.state?.user?.voter || prevUser.voter,
+      vbFlag: location.state?.user?.vbFlag || prevUser.vbFlag,
+    }));
+  
   };
 
   const handleBackButtonClick = () => {
@@ -66,6 +112,20 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-page-container">
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleConfirmSave}
+        message="Are you sure you want to save these changes?"
+      />
+
+      <Modal
+        isOpen={feedbackModal.isOpen}
+        onClose={() => setFeedbackModal({ isOpen: false, message: "" })}
+        message={feedbackModal.message}
+        showActions={false}
+      />
+
       <div className="profile-page">
         <header className="profile-header">
           <div className="profile-avatar-wrapper">
@@ -147,25 +207,25 @@ const ProfilePage = () => {
           </div>
 
           <div className="detail-section">
-            <label>Payment Status</label>
+            <label>Recruitment Status</label>
             {isEditing ? (
               <select
-                value={user.vbFlag ? "Paid" : "Not Paid"}
+                value={user.vbFlag ? "Recruited" : "Not Yet"}
                 onChange={(e) =>
                   setUser((prev) => ({
                     ...prev,
-                    vbFlag: e.target.value === "Paid",
+                    vbFlag: e.target.value === "Recruited",
                   }))
                 }
                 className="editable-input"
               >
-                <option value="Paid">Paid</option>
-                <option value="Not Paid">Not Paid</option>
+                <option value="Recruited">Recruited</option>
+                <option value="Not Yet">Not Yet</option>
               </select>
             ) : (
               <input
                 type="text"
-                value={user.vbFlag ? "Paid" : "Not Paid"}
+                value={user.vbFlag ? "Recruited" : "Not Yet"}
                 readOnly
                 className="readonly-input"
               />
