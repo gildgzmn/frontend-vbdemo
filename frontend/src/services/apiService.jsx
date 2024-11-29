@@ -118,4 +118,25 @@ export const exportBrgyResidentToExcelBulk = async (muniCode) => {
   }
 };
 
+export const updateResident = async (residentData) => {
+  try {
+    const response = await apiClient.put('/resident/update', residentData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating resident:', error);
+    throw error;
+  }
+};
+
+export const createResident = async (residentData) => {
+  try {
+    const response = await apiClient.post('/resident/create', residentData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating resident:', error);
+    throw error;
+  }
+};
+
+
 export default apiClient;

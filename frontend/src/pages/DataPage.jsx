@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { InputText } from "primereact/inputtext";
 import { Tag } from "primereact/tag";
 import { Dropdown } from "primereact/dropdown";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
 import { FilterMatchMode } from "primereact/api";
 import {
   fetchAllResidents,
   fetchAllMunicipalities,
   fetchAllBarangays,
+  createResident,
 } from "../services/apiService";
 import "../css/DataPage.css";
 
 const DataPage = () => {
   const navigate = useNavigate();
-
+  const location = useLocation();
   // State to hold fetched residents' data
   const [residentsData, setResidentsData] = useState([]);
   const [filters, setFilters] = useState({
@@ -24,7 +27,7 @@ const DataPage = () => {
     lastName: { value: null, matchMode: FilterMatchMode.CONTAINS },
     middleName: { value: null, matchMode: FilterMatchMode.CONTAINS },
     mobileNum: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    isVoter: { value: null, matchMode: FilterMatchMode.EQUALS },
+    voter: { value: null, matchMode: FilterMatchMode.EQUALS },
     vbFlag: { value: null, matchMode: FilterMatchMode.EQUALS },
     brgyCode: { value: null, matchMode: FilterMatchMode.CONTAINS },
     muniCode: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -37,44 +40,70 @@ const DataPage = () => {
   const [barangays, setBarangays] = useState([]);
   const [selectedBarangay, setSelectedBarangay] = useState(null);
 
+  // Modal state
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [newResident, setNewResident] = useState({
+    firstName: "",
+    lastName: "",
+    middleName: "",
+    mobileNum: "",
+    age: "",
+    gender: "",
+    muniCode: "",
+    brgyCode: "",
+    isVoter: "",
+    voter: "",
+    vbFlag: "",
+  });
+
+  useEffect(() => {
+    const updatedResident = location.state?.updatedResident;
+    if (updatedResident) {
+      setResidentsData((prevData) =>
+        prevData.map((resident) =>
+          resident.id === updatedResident.id ? updatedResident : resident
+        )
+      );
+    }
+  }, [location.state]);
+
   // Fetch residents' data on component mount
   useEffect(() => {
     const fetchResidentsData = async () => {
       try {
         const data = await fetchAllResidents();
-        console.log("Residents Data:", data);
-  
-        // Normalize muniCode to uppercase
+        //console.log("Residents Data:", data);
+
         const normalizedData = data.map((resident) => ({
           ...resident,
-          muniCode: resident.muniCode?.toUpperCase(), // Ensure consistency
+          muniCode: resident.muniCode?.toUpperCase(),
         }));
         setResidentsData(normalizedData);
-  
+
         // Validate municipality mapping
         console.log("Municipality Map:", municipalityMap);
         normalizedData.forEach((resident) => {
           if (!resident.muniCode) {
-            console.warn(`Resident ID ${resident.id} has no muniCode.`);
+            //console.warn(`Resident ID ${resident.id} has no muniCode.`);
           } else if (!municipalityMap[resident.muniCode]) {
-            console.warn(
-              `No municipality found for muniCode: ${resident.muniCode} (Resident ID: ${resident.id})`
-            );
+            //console.warn(
+            //`No municipality found for muniCode: ${resident.muniCode} (Resident ID: ${resident.id})`
+            //);
           }
         });
       } catch (error) {
         console.error("Error fetching residents data:", error);
       }
     };
-  
+
     const fetchMunicipalitiesData = async () => {
       try {
         const data = await fetchAllMunicipalities();
-        console.log("Municipalities Data:", data);
-  
+        //console.log("Municipalities Data:", data);
+
         setMunicipalities(data);
         const municipalityMap = data.reduce((acc, muni) => {
-          acc[muni.citymunDesc.toUpperCase()] = muni; 
+          acc[muni.citymunDesc.toUpperCase()] = muni;
           return acc;
         }, {});
         setMunicipalityMap(municipalityMap);
@@ -82,11 +111,10 @@ const DataPage = () => {
         console.error("Error fetching municipalities:", error);
       }
     };
-  
+
     fetchMunicipalitiesData();
     fetchResidentsData();
   }, []);
-  
 
   useEffect(() => {
     if (selectedMunicipality) {
@@ -109,6 +137,83 @@ const DataPage = () => {
       setSelectedBarangay(null);
     }
   }, [selectedMunicipality]);
+
+  const handleAddResident = async () => {
+    try {
+      // Ensure all required fields are filled
+      if (
+        !newResident.firstName ||
+        !newResident.lastName ||
+        !newResident.mobileNum ||
+        !newResident.age ||
+        !newResident.gender ||
+        !newResident.muniCode ||
+        !newResident.brgyCode
+      ) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      console.log("muniCode type:", typeof newResident.muniCode);
+      console.log("muniCode value:", newResident.muniCode);
+
+      const muniCode = newResident.muniCode;
+      const selectedMunicipality = Object.values(municipalityMap).find(
+        (municipality) => municipality.citymunCode === muniCode
+      );
+
+      if (!selectedMunicipality) {
+        alert("Invalid Municipality selected.");
+        return;
+      }
+
+      const selectedBarangay = barangays.find(
+        (brgy) => brgy.brgyCode === newResident.brgyCode
+      );
+
+      if (!selectedBarangay) {
+        alert("Invalid Barangay selected.");
+        return;
+      }
+
+      const residentData = {
+        ...newResident,
+        muniCode: selectedMunicipality.citymunDesc,
+        brgyCode: selectedBarangay.brgyDesc,
+      };
+
+      const response = await createResident(residentData);
+      console.log("Resident added:", response);
+
+      const updatedResidents = await fetchAllResidents();
+      window.location.reload();
+      const normalizedData = updatedResidents.map((resident) => ({
+        ...resident,
+        muniCode: resident.muniCode?.toUpperCase(),
+      }));
+      setResidentsData(normalizedData);
+
+      alert("Resident added successfully!");
+      setResidentsData((prev) => [...prev, response]);
+
+      setIsModalVisible(false);
+      setNewResident({
+        firstName: "",
+        lastName: "",
+        middleName: "",
+        mobileNum: "",
+        age: "",
+        gender: "",
+        muniCode: "",
+        brgyCode: "",
+        isVoter: "",
+        voter: "",
+        vbFlag: "",
+      });
+    } catch (error) {
+      console.error("Error adding resident:", error);
+    }
+  };
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
@@ -159,7 +264,9 @@ const DataPage = () => {
         emptyMessage="Please select a Municipality first"
       />
 
-      
+      <button onClick={() => setIsModalVisible(true)} className="add-button">
+        Add Resident
+      </button>
     </div>
   );
 
@@ -172,7 +279,7 @@ const DataPage = () => {
 
   const voteBoughtTemplate = (status) => (
     <Tag
-      value={status ? "Paid" : "Not Yet"}
+      value={status ? "Recruited" : "Not Yet"}
       severity={status ? "danger" : "info"}
     />
   );
@@ -195,7 +302,7 @@ const DataPage = () => {
     <Dropdown
       value={options.value}
       options={[
-        { label: "Paid", value: true },
+        { label: "Recruited", value: true },
         { label: "Not Yet", value: false },
       ]}
       onChange={(e) => options.filterApplyCallback(e.value)}
@@ -247,8 +354,10 @@ const DataPage = () => {
             header="Address"
             body={(rowData) => {
               const municipality = municipalityMap[rowData.muniCode];
-              const provDesc = municipality ? municipality.provDesc : "Unknown Province";
-              
+              const provDesc = municipality
+                ? municipality.provDesc
+                : "Unknown Province";
+
               return `${rowData.brgyCode}, ${rowData.muniCode}, ${provDesc}`;
             }}
             filter
@@ -261,22 +370,137 @@ const DataPage = () => {
           <Column field="age" header="Age" />
           <Column field="gender" header="Gender" />
           <Column
-            field="isVoter"
+            field="voter"
             header="Registration Status"
-            body={(rowData) => statusTemplate(rowData.isVoter)}
+            body={(rowData) => statusTemplate(rowData.voter)}
             filter
             filterElement={voterStatusFilterTemplate}
             showFilterMenu={false}
           />
           <Column
             field="vbFlag"
-            header="Payment Status"
+            header="Recruitment Status"
             body={(rowData) => voteBoughtTemplate(rowData.vbFlag)}
             filter
             filterElement={voteBoughtFilterTemplate}
             showFilterMenu={false}
           />
         </DataTable>
+
+        <Dialog
+          header=""
+          visible={isModalVisible}
+          style={{ width: "30vw" }}
+          onHide={() => setIsModalVisible(false)}
+          footer={
+            <div className="p-dialog-footer">
+              <Button
+                label="Cancel"
+                className="p-button-text p-button-cancel"
+                onClick={() => setIsModalVisible(false)}
+              />
+              <Button
+                label="Submit"
+                className="p-button-primary"
+                onClick={handleAddResident}
+              />
+            </div>
+          }
+        >
+          <h2 className="p-dialog-header-title">ADD RESIDENT</h2>
+
+          <hr className="my-6 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-500 to-transparent dark:opacity-100" />
+          <div className="p-fluid">
+            <div className="p-field">
+              <label>First Name</label>
+              <InputText
+                value={newResident.firstName}
+                onChange={(e) =>
+                  setNewResident({ ...newResident, firstName: e.target.value })
+                }
+              />
+            </div>
+            <div className="p-field">
+              <label>Last Name</label>
+              <InputText
+                value={newResident.lastName}
+                onChange={(e) =>
+                  setNewResident({ ...newResident, lastName: e.target.value })
+                }
+              />
+            </div>
+            <div className="p-field">
+              <label>Middle Name</label>
+              <InputText
+                value={newResident.middleName}
+                onChange={(e) =>
+                  setNewResident({ ...newResident, middleName: e.target.value })
+                }
+              />
+            </div>
+            <div className="p-field">
+              <label>Mobile Number</label>
+              <InputText
+                value={newResident.mobileNum}
+                onChange={(e) =>
+                  setNewResident({ ...newResident, mobileNum: e.target.value })
+                }
+              />
+            </div>
+            <div className="p-field">
+              <label>Age</label>
+              <InputText
+                value={newResident.age}
+                onChange={(e) =>
+                  setNewResident({ ...newResident, age: e.target.value })
+                }
+              />
+            </div>
+            <div className="p-field">
+              <label>Gender</label>
+              <Dropdown
+                value={newResident.gender}
+                options={[
+                  { label: "Male", value: "M" },
+                  { label: "Female", value: "F" },
+                ]}
+                onChange={(e) =>
+                  setNewResident({ ...newResident, gender: e.value })
+                }
+                placeholder="Select Gender"
+              />
+            </div>
+            <div className="p-field">
+              <label>Municipality</label>
+              <Dropdown
+                value={newResident.muniCode}
+                onChange={(e) => {
+                  setNewResident({ ...newResident, muniCode: e.value });
+                  setSelectedMunicipality(e.value); // Ensure it's properly updated
+                }}
+                options={municipalities.map((m) => ({
+                  label: m.citymunDesc,
+                  value: m.citymunCode,
+                }))}
+                placeholder="Select Municipality"
+              />
+            </div>
+            <div className="p-field">
+              <label>Barangay</label>
+              <Dropdown
+                value={newResident.brgyCode}
+                onChange={(e) =>
+                  setNewResident({ ...newResident, brgyCode: e.value })
+                }
+                options={barangays.map((b) => ({
+                  label: b.brgyDesc,
+                  value: b.brgyCode,
+                }))}
+                placeholder="Select Barangay"
+              />
+            </div>
+          </div>
+        </Dialog>
       </div>
     </div>
   );
